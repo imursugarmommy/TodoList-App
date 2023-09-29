@@ -4,41 +4,50 @@ const liElemQuantityHTML = document.querySelector('.items-index');
 let liElemQuantity = 0;
 let list = [];
 
+// Retrieve todos from localStorage on page load
+window.addEventListener('DOMContentLoaded', () => {
+  const storedTodos = localStorage.getItem('todos');
+  if (storedTodos) {
+    list = JSON.parse(storedTodos);
+    liElemQuantity = list.length;
+    liElemQuantityHTML.innerHTML = liElemQuantity;
+
+    list.forEach((todo) => {
+      const newLi = createTodoElement(todo.name, todo.checked);
+      listHTML.appendChild(newLi);
+    });
+  }
+
+  const liELem = document.querySelectorAll('.tasks li');
+
+  liELem.forEach((elem) => {
+    if (elem.closest('.circle').getAttribute('data-checked') !== 'true') {
+      elem.style.color = 'var(--very-dark-grayish-blue)';
+    }
+  });
+});
+
 document.addEventListener('keydown', addTodos);
 
 function addTodos(e) {
   if (e.key === 'Enter') {
-    const newLi = document.createElement('li');
-    const todo = input.value;
+    const todo = input.value.trim();
 
     if (todo === '') {
       return;
     }
 
-    newLi.setAttribute('class', 'flex');
-    list.push({ name: todo });
-    newLi.innerHTML = `
-      <div class="flex todo">
-        <div class="circle" data-checked='false'></div>
-        <p class="task-text">${todo}</p>
-      </div>
-      <svg
-        class="xmark"
-        xmlns="http://www.w3.org/2000/svg"
-        width="18"
-        height="18">
-        <path
-          fill="#494C6B"
-          fill-rule="evenodd"
-          d="M16.97 0l.708.707L9.546 8.84l8.132 8.132-.707.707-8.132-8.132-8.132 8.132L0 16.97l8.132-8.132L0 .707.707 0 8.84 8.132 16.971 0z" />
-      </svg>
-    `;
+    const newLi = createTodoElement(todo, false);
+    list.push({ name: todo, checked: false });
     listHTML.appendChild(newLi);
 
     liElemQuantity++;
     liElemQuantityHTML.innerHTML = liElemQuantity;
 
     input.value = '';
+
+    // Save updated todos to localStorage
+    saveTodosToLocalStorage();
   }
 }
 
@@ -67,13 +76,18 @@ document.addEventListener('click', (e) => {
         target.classList.add('checked');
         todoText.innerHTML = `<s>${todo}</s>`;
         todoText.style.color = 'var(--very-dark-grayish-blue)';
+        list[index].checked = true;
       } else {
         target.setAttribute('data-checked', 'false');
 
         target.classList.remove('checked');
         todoText.innerHTML = todo;
         todoText.style.color = 'var(--light-grayish-blue)';
+        list[index].checked = false;
       }
+
+      // Save updated todos to localStorage
+      saveTodosToLocalStorage();
     }
   }
   const deletedLi = target.closest('li');
@@ -82,6 +96,15 @@ document.addEventListener('click', (e) => {
     listHTML.removeChild(deletedLi);
     liElemQuantity--;
     liElemQuantityHTML.innerHTML = liElemQuantity;
+
+    // Remove deleted todo from list
+    const deletedIndex = Array.from(listHTML.children).indexOf(deletedLi);
+    if (deletedIndex !== -1) {
+      list.splice(deletedIndex, 1);
+    }
+
+    // Save updated todos to localStorage
+    saveTodosToLocalStorage();
   }
 
   deletedLi.addEventListener('dblclick', () => {
@@ -89,6 +112,15 @@ document.addEventListener('click', (e) => {
       listHTML.removeChild(deletedLi);
       liElemQuantity--;
       liElemQuantityHTML.innerHTML = liElemQuantity;
+
+      // Remove deleted todo from list
+      const deletedIndex = Array.from(listHTML.children).indexOf(deletedLi);
+      if (deletedIndex !== -1) {
+        list.splice(deletedIndex, 1);
+      }
+
+      // Save updated todos to localStorage
+      saveTodosToLocalStorage();
     } catch {
       // handling DOM error message, works anyway
     }
@@ -105,10 +137,19 @@ clearCompleted.addEventListener('click', () => {
     if (checkbox.getAttribute('data-checked') === 'true') {
       listHTML.removeChild(elem);
       liElemQuantity--;
+
+      // Remove completed todo from list
+      const completedIndex = Array.from(listHTML.children).indexOf(elem);
+      if (completedIndex !== -1) {
+        list.splice(completedIndex, 1);
+      }
     }
   });
 
   liElemQuantityHTML.innerHTML = liElemQuantity;
+
+  // Save updated todos to localStorage
+  saveTodosToLocalStorage();
 });
 
 const filterButtons = document.querySelectorAll('.dom-steering p');
@@ -152,3 +193,31 @@ filterButtons.forEach((button) => {
     }
   });
 });
+
+function createTodoElement(todoName, checked) {
+  const newLi = document.createElement('li');
+
+  newLi.setAttribute('class', 'flex');
+  newLi.innerHTML = `
+    <div class="flex todo">
+      <div class="circle" data-checked='${checked}'></div>
+      <p class="task-text">${checked ? `<s>${todoName}</s>` : todoName}</p>
+    </div>
+    <svg
+      class="xmark"
+      xmlns="http://www.w3.org/2000/svg"
+      width="18"
+      height="18">
+      <path
+        fill="#494C6B"
+        fill-rule="evenodd"
+        d="M16.97 0l.708.707L9.546 8.84l8.132 8.132-.707.707-8.132-8.132-8.132 8.132L0 16.97l8.132-8.132L0 .707.707 0 8.84 8.132 16.971 0z" />
+    </svg>
+  `;
+
+  return newLi;
+}
+
+function saveTodosToLocalStorage() {
+  localStorage.setItem('todos', JSON.stringify(list));
+}
