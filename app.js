@@ -110,3 +110,45 @@ clearCompleted.addEventListener('click', () => {
 
   liElemQuantityHTML.innerHTML = liElemQuantity;
 });
+
+const filterButtons = document.querySelectorAll('.dom-steering p');
+
+filterButtons.forEach((button) => {
+  button.addEventListener('click', (e) => {
+    filterButtons.forEach((btn) => btn.classList.remove('selected'));
+
+    button.classList.add('selected');
+    const liElem = document.querySelectorAll('.tasks li');
+
+    if (e.target.classList.contains('active')) {
+      liElem.forEach((elem) => {
+        const checkbox = elem.querySelector('.circle');
+        if (checkbox.getAttribute('data-checked') === 'true') {
+          elem.style.display = 'none';
+        }
+        if (checkbox.getAttribute('data-checked') !== 'true') {
+          elem.style.display = 'flex';
+        }
+      });
+    }
+
+    if (e.target.classList.contains('completed')) {
+      liElem.forEach((elem) => {
+        const checkbox = elem.querySelector('.circle');
+
+        if (checkbox.getAttribute('data-checked') === 'true') {
+          elem.style.display = 'flex';
+        }
+        if (checkbox.getAttribute('data-checked') !== 'true') {
+          elem.style.display = 'none';
+        }
+      });
+    }
+
+    if (e.target.classList.contains('all')) {
+      liElem.forEach((elem) => {
+        elem.style.display = 'flex';
+      });
+    }
+  });
+});
